@@ -89,18 +89,17 @@ object CeilCore {
       // community information.
       val startTime1: Double = System.currentTimeMillis.toDouble / 1000
       val labeledVertices = ceilVertJoin(ceilGraph, msgRDD, totalGraphVertices, even).cache()
-      labeledVerts.count()
+      labeledVertices.count()
       val stopTime1: Double = System.currentTimeMillis.toDouble / 1000
-      val T1 = stopTime - startTime
+      val T1 = stopTime1 - startTime1
       // println("Running time is 0 : " + rT1)
 
       val startTime2: Double = System.currentTimeMillis.toDouble / 1000
-
-      val updatedVertex = labeledVertices.map({ case (vid, vdata) =>
+      val updatedVertex = labeledVertices.map({ case (id, data) =>
         (id, data) }).cache()
       updatedVertex.count()
 
-      val prevGraph = ceilGraph
+      var prevGraph = ceilGraph
       ceilGraph = ceilGraph.outerJoinVertices(updatedVertex)((id, old, newOpt) => newOpt.getOrElse(old))
       ceilGraph.triplets.count()
       //ceilGraph.triplets.foreach(println)      
@@ -110,7 +109,7 @@ object CeilCore {
       prevGraph.unpersistVertices(blocking = false)
 
       val stopTime2: Double = System.currentTimeMillis.toDouble / 1000
-      val T2 = stopTimeA - startTimeA
+      val T2 = stopTime2 - startTime2
       // println("Running time is 1 : " + rT_a)
 
       val startTime3: Double = System.currentTimeMillis.toDouble / 1000
@@ -122,13 +121,13 @@ object CeilCore {
           var commIntVert = 0L
           if (!vertCommunitySet.contains(et.srcId)) {
             vertCommunitySet.add(et.srcId)
-            commIntWt += et.srcAttr.internal_Edges
-            commIntVert += et.srcAttr.internal_Vertices
+            commIntWt += et.srcAttr.internalEdges
+            commIntVert += et.srcAttr.internalVertices
           }
           if (!vertCommunitySet.contains(et.dstId)) {
             vertCommunitySet.add(et.dstId)
-            commIntWt += et.dstAttr.internal_Edges
-            commIntVert += et.dstAttr.internal_Vertices
+            commIntWt += et.dstAttr.internalEdges
+            commIntVert += et.dstAttr.internalVertices
           }
           Iterator((et.srcAttr.community, (commIntVert, commIntWt, commIntWt)))
 
@@ -138,39 +137,39 @@ object CeilCore {
           var commIntWtSrc = et.attr
           var commIntWtDst = et.attr
           if (!(vertCommunitySet.contains(et.srcId))) {
-            commVertSrc = et.srcAttr.internal_Vertices
-            commIntWtSrc += et.srcAttr.internal_Edges
+            commVertSrc = et.srcAttr.internalVertices
+            commIntWtSrc += et.srcAttr.internalEdges
             vertCommunitySet.add(et.srcId)
           }
           if (!(vertCommunitySet.contains(et.dstId))) {
-            commVertDst = et.dstAttr.internal_Vertices
-            commIntWtDst += et.dstAttr.internal_Edges
+            commVertDst = et.dstAttr.internalVertices
+            commIntWtDst += et.dstAttr.internalEdges
             vertCommunitySet.add(et.dstId)
           }
 
-          Iterator((et.srcAttr.community, (commVert_src, commIntWtSrc, 0L)), (et.dstAttr.community, (commVert_dst, commIntWtDst, 0L)))
+          Iterator((et.srcAttr.community, (commVertSrc, commIntWtSrc, 0L)), (et.dstAttr.community, (commVertDst, commIntWtDst, 0L)))
         }
       }).reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2, x._3 + y._3)).cache()
-      Updated_Vert_InternalWt.count()
+      updatedVertInternalWt.count()
       //updatedVertInternalWt.foreach(println) //(cId, (comIntVert+commNodesVert, commIntWt+commExtWt+commVertIntWt, ComInternalWt+nodeInternalWt)) // (cId, (comIntVert, commTotalEdges/sigTot, commInternalEdges))
 
       val stopTime3: Double = System.currentTimeMillis.toDouble / 1000
-      val T3 = stoptimestamp - starttimestamp
-      println("Running time is 2 : " + runningTime)
+      val T3 = stopTime3 - startTime3
+      // println("Running time is 2 : " + runningTime)
 
       val startTime4: Double = System.currentTimeMillis.toDouble / 1000
 
       // map each vertex ID to its updated community information
       //(cId, (comIntVert, sigmaTot, ComInternalWt+nodeInternalWt))
       val updatedVerts = ceilGraph.vertices.
-        map({ case (id, data) => (vdata.community, (vid, vdata)) }).
+        map({ case (id, data) => (data.community, (id, data)) }).
         join(updatedVertInternalWt).
         map({
           case (community, ((id, data), newCommUpdateTuple)) =>
             if (newCommUpdateTuple._3 != 0L)
               data.communityInternalEdges = newCommUpdateTuple._3
             else
-              data.communityInternalEdges = vdata.internal_Edges
+              data.communityInternalEdges = data.internalEdges
             data.communityVertices = newCommUpdateTuple._1
             data.communityTotalEdges = newCommUpdateTuple._2
             (id, data)
@@ -182,11 +181,10 @@ object CeilCore {
 
       val stopTime4: Double = System.currentTimeMillis.toDouble / 1000
       val T4 = stopTime4 - startTime4
-      println("Running time is 3 : " + rT3)
+      // println("Running time is 3 : " + rT3)
 
-      val starttimestamp4: Double = System.currentTimeMillis.toDouble / 1000
-
-      val prevGraph = ceilGraph
+      val startTime5: Double = System.currentTimeMillis.toDouble / 1000
+      prevGraph = ceilGraph
       ceilGraph = ceilGraph.outerJoinVertices(updatedVerts)((vid, old, newOpt) => newOpt.getOrElse(old))
       ceilGraph.cache()
       //.partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_ + _).cache()
@@ -210,26 +208,26 @@ object CeilCore {
         updatedLastPhase = updated
       }
 
-      val stoptimestamp4: Double = System.currentTimeMillis.toDouble / 1000
-      val runningTime4 = stoptimestamp4 - starttimestamp4
-      println("Running time is 4 : " + runningTime4)
+      val stopTime5: Double = System.currentTimeMillis.toDouble / 1000
+      val T5 = stopTime5 - startTime5
+      // println("Running time is 4 : " + runningTime4)
     } while (stop <= progressCounter && (even || (updated > 0 && count < maxIter)))
-    println("\nCompleted in " + count + " cycles") //above condition is condition to terminate phase -1
+    // println("\nCompleted in " + count + " cycles") //above condition is condition to terminate phase -1
 
     // Use each vertex's neighboring community data to calculate the global modularity of the graph
-    val allCommunities = ceilGraph.vertices.map({ case (vid, vdata) => (vdata.community, vdata) }).reduceByKey((a, b) => a)
+    val allCommunities = ceilGraph.vertices.map({ case (id, data) => (data.community, data) }).reduceByKey((a, b) => a)
     val communitiesScores = allCommunities.map({
-      case (cid, vdata) =>
-        var community_score = 0.0
-        val n_s = vdata.communityVertices //vdata.communityInternalEdges as both are same when vertex is community itself.
-        if (n_s <= 1) community_score = 0.0
+      case (id, data) =>
+        var communityScore = 0.0
+        val ns = data.communityVertices //vdata.communityInternalEdges as both are same when vertex is community itself.
+        if (ns <= 1) communityScore = 0.0
         else {
-          val b_s = vdata.communityTotalEdges
-          val a_s = vdata.communityInternalEdges
-          community_score = (2 * a_s * a_s).toDouble / (((n_s - 1) * (a_s + b_s)) * totalGraphVertices)
+          val bs = data.communityTotalEdges
+          val as = data.communityInternalEdges
+          communityScore = (2 * as * as).toDouble / (((ns - 1) * (as + bs)) * totalGraphVertices)
         }
-        CEIL_Score += community_score
-        CEIL_Score
+        CEILScore += communityScore
+        CEILScore
     })
 
     val last = communitiesScores.count().toInt
@@ -305,13 +303,13 @@ object CeilCore {
       //msgs.foreach(println)
 
       msgs.foreach({
-        case ((communityId,testCommunityTotalEdges, testCommunityInternalEdges, testCommunityVertices), incidentEdges) =>
+        case ((communityId, testCommunityTotalEdges, testCommunityInternalEdges, testCommunityVertices), incidentEdges) =>
           var deltaQ = 0.0
           if (data.community == communityId)
             deltaQ = 0.0
           else {
-            val communityScores = communityScores(testCommunityTotalEdges, incident_edges, testCommInternalEdges, testCommunityVertices, vdata.outgoingEdges, vdata.internal_Edges, vdata.internal_Vertices, totalGraphVertices)
-            deltaQ = comm_scores._2 - comm_scores._1
+            val commScores = communityScores(testCommunityTotalEdges, incidentEdges, testCommunityInternalEdges, testCommunityVertices, data.outgoingEdges, data.internalEdges, data.internalVertices, totalGraphVertices)
+            deltaQ = commScores._2 - commScores._1
           }
 
           //println(deltaQ)
@@ -323,30 +321,33 @@ object CeilCore {
       })
       // only allow changes from low to high communties on even cyces and high to low on odd cycles
       //println("For Community : " + vdata.community + ", Best Community is -----------$$$-----> " + bestCommunity)
-      if (vdata.community != bestCommunity && ((even && vdata.community > bestCommunity) || (!even && vdata.community < bestCommunity))) {
+      if (data.community != bestCommunity && ((even && data.community > bestCommunity) || (!even && data.community < bestCommunity))) {
         //println("Community : " + vdata.community + ", is going to community-----------$$$-----> " + bestCommunity)
-        vdata.community = bestCommunity
-        vdata.changed = true
+        data.community = bestCommunity
+        data.changed = true
       } else {
-        vdata.changed = false
+        data.changed = false
       }
-      vdata
+      data
     })
   }
 
-  private def removal(vdata: VertexState, msgs: Map[(Long, Long, Long, Long), Long], totalGraphVertices: Long) = {
+  private def removal(
+    data: VertexState,
+    msgs: Map[(Long, Long, Long, Long), Long],
+    totalGraphVertices: Long) = {
     var incidentEd = 0L
     msgs.foreach({
       case ((communityId, testCommunityTotalEdges, testCommInternalEdges, testCommunityVertices), incidentEdges) =>
-        if (vdata.community == communityId)
+        if (data.community == communityId)
           incidentEd += incidentEdges
     })
-    val afr_rm_total_edges = vdata.communityTotalEdges - vdata.outgoingEdges - vdata.internal_Edges + incidentEd
-    val afr_rm_testCommInternalEdges = vdata.communityInternalEdges - vdata.internal_Edges - incidentEd
-    val afr_rm_testCommunityVertices = vdata.communityVertices - vdata.internal_Vertices
+    val afrRmTotalEdges = data.communityTotalEdges - data.outgoingEdges - data.internalEdges + incidentEd
+    val afrRmTestCommInternalEdges = data.communityInternalEdges - data.internalEdges - incidentEd
+    val afrRmTestCommunityVertices = data.communityVertices - data.internalVertices
 
-    val comm_scores = community_scores(afr_rm_total_edges, incidentEd, afr_rm_testCommInternalEdges, afr_rm_testCommunityVertices, vdata.outgoingEdges, vdata.internal_Edges, vdata.internal_Vertices, totalGraphVertices)
-    val deltaQ = comm_scores._2 - comm_scores._1
+    val commScores = communityScores(afrRmTotalEdges, incidentEd, afrRmTestCommInternalEdges, afrRmTestCommunityVertices, data.outgoingEdges, data.internalEdges, data.internalVertices, totalGraphVertices)
+    val deltaQ = commScores._2 - commScores._1
     deltaQ
   }
 
@@ -385,7 +386,7 @@ object CeilCore {
       val aOld = testCommunityInternalEdges
 
       //testCommTotatEdgeWt - testCommunityInternalEdge
-      val bOld = testCommTotalEdgeWt - testCommunityInternalEdges
+      val bOld = testCommunityTotalEdgeWt - testCommunityInternalEdges
 
       oldCommunityScore = (2 * aOld * aOld).toDouble / ((((testCommunityVertices - 1) * (aOld + bOld)) * totalGraphVertices)).toDouble
     }
@@ -395,12 +396,12 @@ object CeilCore {
     if ((testCommunityVertices + candidateInternalVertices) <= 1) {
       newCommunityScore = 0.0
     } else {
-      //testCommTotatEdgeWt + incident_Edges + internal_Edges - outgoingEdgesDest
-      val aNew = testCommunityInternalEdges + incident_Edges + internal_Edges
+      //testCommTotatEdgeWt + incident_Edges + internalEdges - outgoingEdgesDest
+      val aNew = testCommunityInternalEdges + incidentEdges + internalEdges
       //testCommTotatEdgeWt - testCommunityInternalEdge + outgoingEdgesCand - 2 * incident_Edges
-      val bNew = testCommTotalEdgeWt - testCommunityInternalEdges + outgoingEdgesCand - 2 * incident_Edges
+      val bNew = testCommunityTotalEdgeWt - testCommunityInternalEdges + outgoingEdgesCand - 2 * incidentEdges
       val nNew = testCommunityVertices + candidateInternalVertices
-      new_community_score = (2 * aNew * aNew).toDouble / (((nNew - 1) * (aNew + bNew)) * totalGraphVertices).toDouble
+      newCommunityScore = (2 * aNew * aNew).toDouble / (((nNew - 1) * (aNew + bNew)) * totalGraphVertices).toDouble
     }
     //println("New_community_score  : " + new_community_score)
 
@@ -425,10 +426,10 @@ object CeilCore {
         state.community = data.community
         state.changed = false
         state.communityTotalEdges = data.communityTotalEdges
-        state.internal_Edges = data.communityInternalEdges
+        state.internalEdges = data.communityInternalEdges
         state.outgoingEdges = data.communityTotalEdges - data.communityInternalEdges
-        state.internal_Vertices = vdata.communityVertices
-        state.communityVertices = vdata.communityVertices
+        state.internalVertices = data.communityVertices
+        state.communityVertices = data.communityVertices
         state.communityInternalEdges = data.communityInternalEdges
         (data.community, state)
       }).cache()

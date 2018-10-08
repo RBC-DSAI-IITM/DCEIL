@@ -37,7 +37,7 @@ class HDFSCeilRunner(
     q: Double,
     graph: Graph[VertexState, Long]) = {
  
-    graph.vertices.saveAsTextFile(outputdir + "/level_" + level + "_vertices")
+    graph.vertices.saveAsTextFile(outputDir + "/level_" + level + "_vertices")
     //graph.edges.saveAsTextFile(outputdir + "/level_" + level + "_edges")
     //graph.vertices.map( {case (id,v) => ""+id+","+v.internalWeight+","+v.community }).saveAsTextFile(outputdir+"/level_"+level+"_vertices_Mapped")
     //graph.edges.mapValues({ case e => "" + e.srcId + "," + e.dstId + "," + e.attr }).saveAsTextFile(outputdir+"/level_"+level+"_edges")  
@@ -82,7 +82,7 @@ class HDFSCeilRunner(
           
         } else {
           val existingListOfVert = communityVertMap.getOrElse(vertexComm, List[Long]())
-          val newListOfVert = existingListOfVert ::: List(vertex_id)
+          val newListOfVert = existingListOfVert ::: List(vertexId)
           //println(newList_Of_Vert)
           if (!prevCommunityVert.isEmpty) {
             var updatedList: List[Long] = List()
@@ -112,7 +112,7 @@ class HDFSCeilRunner(
     prevLevelCommunityVert = comm.collect().last
     //println(prevLevelCommunityVert)
     sc.parallelize(prevLevelCommunityVert.toSeq).
-      saveAsTextFile(outputdir + "/level_" + level + "_vertices_Mapped1")
+      saveAsTextFile(outputDir + "/level_" + level + "_vertices_Mapped1")
     comm.unpersist(blocking = false)
   }
 }

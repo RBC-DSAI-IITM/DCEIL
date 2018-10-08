@@ -35,15 +35,15 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
 
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
 
-    val startTime: Double = System.currentTimeMillis.toDouble / 1000L
+    val startTimeGraphCreation: Double = System.currentTimeMillis.toDouble / 1000L
     var ceilGraph = CeilCore.createCeilGraph(graph)
     val n = ceilGraph.vertices.count() // n is total Graph Vertices
     // println(" Total Vertices in graph : " + n)
-    val stopTime: Double = System.currentTimeMillis.toDouble / 1000L
-    val runTime = stopTime - startTime
+    val stopTimeGraphCreation: Double = System.currentTimeMillis.toDouble / 1000L
+    val runTimeGraphCreation = stopTimeGraphCreation - startTimeGraphCreation
     // println("Create Graph Running time is : " + runn)
 
-    val startTime: Double = System.currentTimeMillis.toDouble / 1000L
+    val startTimeGraphOperation: Double = System.currentTimeMillis.toDouble / 1000L
     var level = -1 // number of times the graph has been compressed
     var q = 0.0 // current modularity value
     var halt = false
@@ -66,10 +66,10 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
       //if (currentQ > q + 0.0000001) {
       if (passes > 2 && currentQ > q + 0.0000001) {
         q = currentQ
-        val startTime: Double = System.currentTimeMillis.toDouble / 1000L
+        val startTimeGraphCompression: Double = System.currentTimeMillis.toDouble / 1000L
         ceilGraph = CeilCore.compressGraph(ceilGraph)
-        val stopTime: Double = System.currentTimeMillis.toDouble / 1000L
-        val runningTime = stopTime - startTime
+        val stopTimeGraphCompression: Double = System.currentTimeMillis.toDouble / 1000L
+        val runningTimeGraphCompression = stopTimeGraphCompression - startTimeGraphCompression
         // println("Compress Graph Running time is : " + runningTime)
       } else {
         halt = true
@@ -77,8 +77,8 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
 
     } while (!halt)
 
-    val stopTime: Double = System.currentTimeMillis.toDouble / 1000L
-    val runTime = stopTime - startTime
+    val stopTimeGraphOperation: Double = System.currentTimeMillis.toDouble / 1000L
+    val runningTimeGraphOperation = stopTimeGraphOperation - startTimeGraphOperation
     // println("Total algo running time is : " + runnt)
     
     finalSave(sc, level, q, ceilGraph)

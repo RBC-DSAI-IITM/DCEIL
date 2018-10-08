@@ -15,10 +15,10 @@ case class Config(
   jars: String = "",
   sparkHome: String = "",
   parallelism: Int = -1,
-  edgedelimiter: String = ",",
+  edgeDelimiter: String = ",",
   minProgress: Int = 1,
   progressCounter: Int = 1,
-  ipaddress: Boolean = false,
+  ipAddress: Boolean = false,
   properties: Seq[(String, String)] = Seq.empty[(String, String)])
 
 /** Executes the CEIL distributed community detection.
@@ -28,15 +28,13 @@ object Main {
 
   def main(args: Array[String]) {
 
-    val parser = new scopt.OptionParser[Config](this.getClass().toString()) {
+    val parser = new scopt.OptionParser[Config]("dceil") {
       head("DCEIL", "1.0.0")
 
-      opt[String]('i', "input").required().valueName("<input_file>").
-        action( (x, c) => c.copy(input = x) }.
+      opt[String]("<input_file>").action( (x, c) => c.copy(input = x) ).
         text("input file or path")
 
-      opt[String]('o', "output").required().valueName("<output_file>").
-        action( (x, c) => c.copy(output = x) ).
+      opt[String]("<output_file>").action( (x, c) => c.copy(output = x) ).
         text("output path")
 
       opt[String]('m', "master").action( (x, c) => c.copy(master = x) ).
@@ -57,19 +55,22 @@ object Main {
 
       opt[Int]('y', "progresscounter").action( (x, c) => c.copy(progressCounter = x) ).
         text("""number of times the algorithm can fail to make progress
-                 before exiting. default=1""")
+                before exiting. default=1""")
 
-      opt[String]('d', "edgedelimiter").action( (x, c) => c.copy(edgedelimiter = x) ).
+      opt[String]('d', "edgedelimiter").action( (x, c) => c.copy(edgeDelimiter = x) ).
         text("input file edge delimiter. default=\",\"")
 
       opt[String]('j', "jars").action( (x, c) => c.copy(jars = x) ).
         text("comma-separated list of jars")
 
-      opt[Boolean]('z', "ipaddress").action( (x, c) => c.copy(ipaddress = x) ).
+      opt[Boolean]('z', "ipaddress").action( (x, c) => c.copy(ipAddress = x) ).
         text("set to true to convert ipaddresses to Long ids. Defaults to false")
 
+      help("help").text("prints this usage text")
+
       arg[(String, String)]("<property>=<value>....").unbounded().optional().
-        action( case ((k, v), c) => c.copy(properties = c.properties :+ (k, v)) )
+        action{ case ((k, v), c) => c.copy(properties = c.properties :+ (k, v)) }
+    }
 
     var edgeFile, outputDir, master, jobName, jars, sparkHome, edgeDelimiter = ""
     var properties: Seq[(String, String)] = Seq.empty[(String, String)]
@@ -82,13 +83,13 @@ object Main {
         master = config.master
         jobName = config.appName
         jars = config.jars
-        sparkHome = config.sparkhome
+        sparkHome = config.sparkHome
         properties = config.properties
         parallelism = config.parallelism
-        edgeDelimiter = config.edgedelimiter
-        minProgress = config.minprogress
-        progressCounter = config.progresscounter
-        ipAddress = config.ipaddress
+        edgeDelimiter = config.edgeDelimiter
+        minProgress = config.minProgress
+        progressCounter = config.progressCounter
+        ipAddress = config.ipAddress
 
         if (edgeFile == "" || outputDir == "") {
           println(parser.usage)
@@ -118,19 +119,19 @@ object Main {
     var sc: SparkContext = null
     if (master.indexOf("local") == 0) {
       // println(s"sparkcontext = new SparkContext($master,$jobname)")
-      sc = new SparkContext(master, jobname)
+      sc = new SparkContext(master, jobName)
     } else {
       // println(s"sparkcontext = new SparkContext($master,$jobname,$sparkhome,$jars)")
-      sc = new SparkContext(master, jobname, sparkHome, jars.split(","))
+      sc = new SparkContext(master, jobName, sparkHome, jars.split(","))
     }
     
     val rootLog = Logger.getRootLogger()
     rootLog.setLevel(Level.ERROR)
     
     // read the input into a distributed edge list
-    val inputHashFunc = if (ipaddress) (id: String) => IpAddress.toLong(id) else (id: String) => id.toLong
+    val inputHashFunc = if (ipAddress) (id: String) => IpAddress.toLong(id) else (id: String) => id.toLong
     var edgeRDD = sc.textFile(edgeFile).map(row => {
-      val tokens = row.split(edgedelimiter).map(_.trim())
+      val tokens = row.split(edgeDelimiter).map(_.trim())
       tokens.length match {
         case 2 => { new Edge(inputHashFunc(tokens(0)), inputHashFunc(tokens(1)), 1L) }
         case 3 => { new Edge(inputHashFunc(tokens(0)), inputHashFunc(tokens(1)), tokens(2).toLong) }
@@ -149,12 +150,10 @@ object Main {
     // use a helper class to execute the ceil
     // algorithm and save the output.
     // to change the outputs you can extend CeilRunner.scala
-    val runner = new HDFSCeilRunner(minProgress, progressCounter, outputdir)
+    val runner = new HDFSCeilRunner(minProgress, progressCounter, outputDir)
     runner.run(sc, graph)
     val stoptimestamp: Long = System.currentTimeMillis / 1000L
     val runningTime = stoptimestamp - starttimestamp
-    println("Total Running time is : " + runningTime)
-
+    // println("Total Running time is : " + runningTime)
   }
-
 }
