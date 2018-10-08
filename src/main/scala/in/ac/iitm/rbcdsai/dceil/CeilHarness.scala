@@ -10,17 +10,17 @@ import org.apache.spark.Logging
   *
   * The input Graph must have an edge type of Long.
   *
-  * All lower level algorithm functions are in CeilCore, this class acts to
-  * coordinate calls into CeilCore and check for convergence criteria
+  * For low-level algorithm see CeilCore.
+  * This class coordinates calls into CeilCore and checks for convergence criteria
   *
-  * Two hooks are provided to allow custom behavior
-  *    -saveLevel  override to save the graph (vertcies/edges) after each phase of the process
-  *    -finalSave  override to specify a final action / save when the algorithm has completed. (not nessicary if saving at each level)
+  * Two hooks are provided to allow custom behavior:
+  *    -saveLevel  override to save the graph (vertices/edges) after each phase of the process
+  *    -finalSave  override to specify a final action/save when the algorithm has completed. (not necessary if saving at each level)
   *
   * High Level algorithm description.
   *
   *  Set up - Each vertex in the graph is assigned its own community.
-  *  1.  Each vertex attempts to increase graph modularity by changing to a neighboring community, or reamining in its current community.
+  *  1.  Each vertex attempts to increase graph modularity by changing to a neighboring community, or remaining in its current community.
   *  2.  Repeat step 1 until progress is no longer made
   *         - progress is measured by looking at the decrease in the number of vertices that change their community on each pass.
   *           If the change in progress is < minProgress more than progressCounter times we exit this level.
@@ -89,16 +89,12 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
     * level 0 = no compression
     * override to specify behavior
     */
-  def saveLevel(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {
-
-  }
+  def saveLevel(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {}
 
   /** Completes any final save actions required
     *
     * override to specify save behavior
     */
-  def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {
-
-  }
+  def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {}
 
 }
