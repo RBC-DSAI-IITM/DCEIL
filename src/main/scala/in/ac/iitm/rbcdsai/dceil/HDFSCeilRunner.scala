@@ -16,7 +16,7 @@ import scala.collection.Map
   * @param progressCounter the progress counter
   * @param outputDir the output directory
   * 
-  * @see CeilHarness.scala for algorithm
+  * @see CeilHarness for high-level interface
   */
 class HDFSCeilRunner(
     minProgress: Int,

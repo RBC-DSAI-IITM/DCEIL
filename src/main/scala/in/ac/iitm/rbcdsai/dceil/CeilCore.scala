@@ -3,13 +3,11 @@ package in.ac.iitm.rbcdsai.dceil
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.graphx._
-import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.graphx.Graph.graphToGraphOps
 import scala.reflect.ClassTag
-import scala.math.BigDecimal.double2bigDecimal
 
-/** Provides low-level methods for CEIL computation. Generally used
-  * by CeilHarness to coordinate the correct execution of the algorithm
+/** CeilCore provides low-level methods for CEIL computation.
+
+  * Generally used by CeilHarness to coordinate the correct execution of the algorithm
   * through its several stages.
   * 
   * For the sequential algorithm see:
@@ -24,6 +22,7 @@ object CeilCore {
     * @return a graph which can be used for CEIL computation.
     */
   def createCeilGraph[VD: ClassTag](graph: Graph[VD, Long]): Graph[VertexState, Long] = {
+
     val outgoingEdgesMapFunc = (e: EdgeTriplet[VD, Long]) =>
     Iterator((e.srcId, e.attr), (e.dstId, e.attr))
 
@@ -63,6 +62,7 @@ object CeilCore {
     minProgress: Int = 1,
     progressCounter: Int = 1,
     totalGraphVertices: Long): (Double, Graph[VertexState, Long], Int) = {
+
     var ceilGraph = graph.cache()
     //ceilGraph.vertices.foreach(println)
 
@@ -233,15 +233,15 @@ object CeilCore {
     val last = communitiesScores.count().toInt
     CEILScore = communitiesScores.take(last).last
     diffInCEILScores = CEILScore - prevCEILScore
-    //println("Difference in CEIL Scores is : " + diff_In_CEIL_Scores)
-    // In CEIL, this is CEIL score, sum of all the community scores.
+
+    // In CEIL, this is the CEIL score, sum of all the community scores.
     var actualQ = 0.0
     if (diffInCEILScores < 0.0) {
       actualQ = 0.0
     } else {
       actualQ = diffInCEILScores
     }
-    //val actualQ = diff_In_CEIL_Scores //newVerts.values.reduce(_ + _)
+
     prevCEILScore = CEILScore
     // return the modularity value of the graph along with the graph. vertices are labeled with their community
     return (actualQ, ceilGraph, count / 2)
@@ -250,6 +250,7 @@ object CeilCore {
 
   /** Creates the messages passed between vertices to convey neighborhood community data.*/
   private def sendMsg(et: EdgeTriplet[VertexState, Long]) = {
+
     val m1 = (et.dstId, Map((et.srcAttr.community,
       et.srcAttr.communityTotalEdges,
       et.srcAttr.communityInternalEdges,
@@ -267,6 +268,7 @@ object CeilCore {
   private def mergeMsg(
     m1: Map[(Long, Long, Long, Long), Long],
     m2: Map[(Long, Long, Long, Long), Long]) = {
+
     val newMap = scala.collection.mutable.HashMap[(Long, Long, Long, Long), Long]()
     m1.foreach({
       case (k, v) =>
@@ -286,21 +288,18 @@ object CeilCore {
     * neighboring community and removal from its own community.
     * Wherever the change is maximum, moves vertex to that community and
     * returns set of vertices with updated information of their community.
-    * 
     */
   private def ceilVertJoin(
     ceilGraph: Graph[VertexState, Long],
     msgRDD: VertexRDD[Map[(Long, Long, Long, Long), Long]],
     totalGraphVertices: Long,
     even: Boolean) = {
+
     ceilGraph.vertices.innerJoin(msgRDD)((id, data, msgs) => {
+
       var bestCommunity = data.community
       var maxDeltaQ: Double = 0.0
       maxDeltaQ = removal(data, msgs, totalGraphVertices)
-      //println("Vid is : " + vid)
-      //println(vdata)
-      //println(maxDeltaQ)
-      //msgs.foreach(println)
 
       msgs.foreach({
         case ((communityId, testCommunityTotalEdges, testCommunityInternalEdges, testCommunityVertices), incidentEdges) =>
@@ -312,8 +311,7 @@ object CeilCore {
             deltaQ = commScores._2 - commScores._1
           }
 
-          //println(deltaQ)
-          //if (deltaQ > maxDeltaQ) {          
+            
           if (deltaQ > maxDeltaQ || (deltaQ > 0 && (deltaQ == maxDeltaQ && communityId > bestCommunity))) {
             maxDeltaQ = deltaQ
             bestCommunity = communityId
@@ -332,10 +330,12 @@ object CeilCore {
     })
   }
 
+  /** Calculates delta Q for two communities.*/
   private def removal(
     data: VertexState,
     msgs: Map[(Long, Long, Long, Long), Long],
     totalGraphVertices: Long) = {
+
     var incidentEd = 0L
     msgs.foreach({
       case ((communityId, testCommunityTotalEdges, testCommInternalEdges, testCommunityVertices), incidentEdges) =>
@@ -355,12 +355,13 @@ object CeilCore {
     *
     * @param testCommunityTotalEdgeWt
     * @param incidentEdges
-    * @param testCommunityInteralEdges
+    * @param testCommunityInternalEdges
     * @param testCommunityVertices
     * @param outgoingEdgesCand
     * @param internalEdges
     * @param candidateInternalVertices
     * @param totalGraphVertices
+    * @return oldCommunityScore and newCommunityScore
     */
   private def communityScores(
     testCommunityTotalEdgeWt: Long,
@@ -371,6 +372,7 @@ object CeilCore {
     internalEdges: Long,
     candidateInternalVertices: Long,
     totalGraphVertices: Long): (Double, Double) = {
+
     // Community Score requires: n => number of vertices in community,
     //                           a => internal edges weight,
     //                           b => external edges weight,
@@ -390,7 +392,6 @@ object CeilCore {
 
       oldCommunityScore = (2 * aOld * aOld).toDouble / ((((testCommunityVertices - 1) * (aOld + bOld)) * totalGraphVertices)).toDouble
     }
-    //println("Old_community_score  : " + old_community_score)
 
     var newCommunityScore = 0.0
     if ((testCommunityVertices + candidateInternalVertices) <= 1) {
@@ -403,19 +404,19 @@ object CeilCore {
       val nNew = testCommunityVertices + candidateInternalVertices
       newCommunityScore = (2 * aNew * aNew).toDouble / (((nNew - 1) * (aNew + bNew)) * totalGraphVertices).toDouble
     }
-    //println("New_community_score  : " + new_community_score)
 
     return (oldCommunityScore, newCommunityScore)
   }
 
-  /** Compresses a graph by its communities and aggregates both internal node
-    * weights and edge weights within communities.
+  /** Compresses a graph by its communities and aggregates both internal node weights
+    * and edge weights within communities.
     * 
     * @param graph the uncompressed graph
     * @param debug the flag to debug
     * @return the compressed graph
     */
   def compressGraph(graph: Graph[VertexState, Long], debug: Boolean = true): Graph[VertexState, Long] = {
+
     // Makes each community a vertex and renames them as  newVerts.
     // Updates vertex information from community information.
     val newVerts = graph.vertices.
@@ -434,7 +435,6 @@ object CeilCore {
         (data.community, state)
       }).cache()
     newVerts.count()
-    //newVerts.foreach(println)
 
     // Translates each vertex edge to a community edge.
     val edges = graph.triplets.flatMap(et => {
@@ -451,7 +451,6 @@ object CeilCore {
       groupEdges(_ + _).cache()
 
     ceilGraph.triplets.count()
-    //ceilGraph.triplets.foreach(println)
 
     newVerts.unpersist(blocking = false)
     edges.unpersist(blocking = false)

@@ -17,6 +17,7 @@ class VertexState extends Serializable {
 
   /** toString overrides the default toString to provide specific details.*/
   override def toString(): String = {
+
     "{ community: " + community +
     ", communitySigmaTotal: " + communityTotalEdges +
     ", internalWeight: " + internalEdges +

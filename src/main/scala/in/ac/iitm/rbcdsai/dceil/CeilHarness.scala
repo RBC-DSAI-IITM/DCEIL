@@ -6,35 +6,38 @@ import org.apache.spark.graphx._
 import scala.reflect.ClassTag
 import org.apache.spark.Logging
 
-/** A coordinator for execution of DCEIL.
-  *
+/** CeilHarness is a coordinator for execution of DCEIL.
+  * 
+  * It coordinates calls into CeilCore and checks for convergence criteria
   * The input Graph must have an edge type of Long.
   *
-  * For low-level algorithm see CeilCore.
-  * This class coordinates calls into CeilCore and checks for convergence criteria
+  * High Level algorithm description:
   *
-  * Two hooks are provided to allow custom behavior:
-  *    -saveLevel  override to save the graph (vertices/edges) after each phase of the process
-  *    -finalSave  override to specify a final action/save when the algorithm has completed. (not necessary if saving at each level)
+  *  Setup - Each vertex in the graph is assigned its own community.
+  *  1. Each vertex attempts to increase graph modularity by changing to a neighboring community or remaining in its current community.
+  *  2. Step 1 is repeated until progress is no longer made. The progress is measured by looking at the decrease in the number of
+  *     vertices that change their community on each pass. If the change in progress is < minProgress more than progressCounter times
+  *     the level is exited.
+  *  3. The level is saved and each vertex is now labeled with a community.
+  *  4. The graph is compressed, representing each community as a single node.
+  *  5. Steps 1-4 are repeated on the compressed graph.
+  *  6. Repeated until modularity is no longer improved
+  * 
+  * @constructor create a new harness with minProgress and progressCounter
+  * @param minProgress the minimum progress
+  * @param progressCounter the progress counter
+  * 
+  * @see CeilCore for low-level algorithm
+  * @see HDFSCeilRunner for wrapper of CeilHarness
   *
-  * High Level algorithm description.
-  *
-  *  Set up - Each vertex in the graph is assigned its own community.
-  *  1.  Each vertex attempts to increase graph modularity by changing to a neighboring community, or remaining in its current community.
-  *  2.  Repeat step 1 until progress is no longer made
-  *         - progress is measured by looking at the decrease in the number of vertices that change their community on each pass.
-  *           If the change in progress is < minProgress more than progressCounter times we exit this level.
-  *  3. -saveLevel, each vertex is now labeled with a community.
-  *  4. Compress the graph representing each community as a single node.
-  *  5. repeat steps 1-4 on the compressed graph.
-  *  6. repeat until modularity is no longer improved
-  *
-  *  For details see:  Fast unfolding of communities in large networks, Blondel 2008
+  *  For details see:
+  *  [[https://arxiv.org/abs/0803.0476 Fast unfolding of communities in large networks, 2008]]
   */
 class CeilHarness(minProgress: Int, progressCounter: Int) {
 
   def run[VD: ClassTag](sc: SparkContext, graph: Graph[VD, Long]) = {
 
+    // Create graph
     val startTimeGraphCreation: Double = System.currentTimeMillis.toDouble / 1000L
     var ceilGraph = CeilCore.createCeilGraph(graph)
     val n = ceilGraph.vertices.count() // n is total Graph Vertices
@@ -43,6 +46,7 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
     val runTimeGraphCreation = stopTimeGraphCreation - startTimeGraphCreation
     // println("Create Graph Running time is : " + runn)
 
+    // Operate on graph
     val startTimeGraphOperation: Double = System.currentTimeMillis.toDouble / 1000L
     var level = -1 // number of times the graph has been compressed
     var q = 0.0 // current modularity value
@@ -58,7 +62,7 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
 
       saveLevel(sc, level, currentQ, ceilGraph)
 
-      // If modularity increases by at least 0.001, compresses the graph
+      // If modularity increases by at least 0.001, compress the graph
       // and repeats halt immediately if the community labeling takes less
       // than 3 passes.
 
@@ -93,7 +97,7 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
 
   /** Completes any final save actions required
     *
-    * override to specify save behavior
+    * Override to specify save behavior. Not needed if saved at each level.
     */
   def finalSave(sc: SparkContext, level: Int, q: Double, graph: Graph[VertexState, Long]) = {}
 

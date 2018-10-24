@@ -31,20 +31,20 @@ object Main {
     val parser = new scopt.OptionParser[Config]("dceil") {
       head("DCEIL", "1.0.0")
 
-      opt[String]("<input_file>").action( (x, c) => c.copy(input = x) ).
-        text("input file or path")
+      arg[String]("<input_file>").action( (x, c) => c.copy(input = x) ).
+        text("input file")
 
-      opt[String]("<output_file>").action( (x, c) => c.copy(output = x) ).
+      arg[String]("<output_file>").action( (x, c) => c.copy(output = x) ).
         text("output path")
 
       opt[String]('m', "master").action( (x, c) => c.copy(master = x) ).
-        text("spark master, local[N] or spark://host:port default=local")
+        text("spark master, local[N] or spark://host:port. default=local")
 
       opt[String]('h', "sparkhome").action( (x, c) => c.copy(sparkHome = x) ).
-        text ("SPARK_HOME required to run on cluster")
+        text("$SPARK_HOME required to run on cluster")
 
       opt[String]('n', "jobname").action( (x, c) => c.copy(appName = x) ).
-        text ("job name")
+        text("job name")
 
       opt[Int]('p', "parallelism").action( (x, c) => c.copy(parallelism = x) ).
         text ("sets spark.default.parallelism and minSplits on the edge file")
@@ -60,16 +60,17 @@ object Main {
       opt[String]('d', "edgedelimiter").action( (x, c) => c.copy(edgeDelimiter = x) ).
         text("input file edge delimiter. default=\",\"")
 
-      opt[String]('j', "jars").action( (x, c) => c.copy(jars = x) ).
-        text("comma-separated list of jars")
+      opt[String]('j', "jars").valueName("<jar1>,<jar2>...").action( (x, c) =>
+        c.copy(jars = x) ).text("comma-separated list of jars")
 
       opt[Boolean]('z', "ipaddress").action( (x, c) => c.copy(ipAddress = x) ).
-        text("set to true to convert ipaddresses to Long ids. Defaults to false")
+        text("set to true to convert ipaddresses to Long ids. default=false")
 
       help("help").text("prints this usage text")
 
-      arg[(String, String)]("<property>=<value>....").unbounded().optional().
-        action{ case ((k, v), c) => c.copy(properties = c.properties :+ (k, v)) }
+      arg[(String, String)]("<property>=<value>...").unbounded().optional().
+        action{ case ((k, v), c) => c.copy(properties = c.properties :+ (k, v)) }.
+        text("optional unbounded arguments")
     }
 
     var edgeFile, outputDir, master, jobName, jars, sparkHome, edgeDelimiter = ""
@@ -102,7 +103,7 @@ object Main {
     // set system properties
     properties.foreach({
       case (k, v) =>
-        println(s"System.setProperty($k, $v)")
+        // println(s"System.setProperty($k, $v)")
         System.setProperty(k, v)
     })
 
@@ -118,10 +119,8 @@ object Main {
     // Create the spark context
     var sc: SparkContext = null
     if (master.indexOf("local") == 0) {
-      // println(s"sparkcontext = new SparkContext($master,$jobname)")
       sc = new SparkContext(master, jobName)
     } else {
-      // println(s"sparkcontext = new SparkContext($master,$jobname,$sparkhome,$jars)")
       sc = new SparkContext(master, jobName, sparkHome, jars.split(","))
     }
     
@@ -139,21 +138,22 @@ object Main {
       }
     })
 
-    // if the parallelism option was set map the input to the correct number of partitions,
-    // otherwise parallelism will be based off number of HDFS blocks
+    // If the parallel option is set, map the input to the correct number of partitions,
+    // otherwise parallelism will be based on number of HDFS blocks.
+    // For shrinking the RDD, we use coalesce() which is more efficient than repartition() since it
+    // avoids a shuffle operation.
     if (parallelism != -1) edgeRDD = edgeRDD.coalesce(parallelism, shuffle = true)
-    //For shrinking the RDD, I am using the coalesce() operator. This is more efficient than repartition() since it avoids a shuffle operation.
     
     // create the graph
     val graph = Graph.fromEdges(edgeRDD, None)
-    val starttimestamp: Long = System.currentTimeMillis / 1000L
+    val startTime: Long = System.currentTimeMillis / 1000L
     // use a helper class to execute the ceil
     // algorithm and save the output.
-    // to change the outputs you can extend CeilRunner.scala
+    // to change the outputs, one can extend CeilRunner
     val runner = new HDFSCeilRunner(minProgress, progressCounter, outputDir)
     runner.run(sc, graph)
-    val stoptimestamp: Long = System.currentTimeMillis / 1000L
-    val runningTime = stoptimestamp - starttimestamp
+    val stopTime: Long = System.currentTimeMillis / 1000L
+    val runningTime = stopTime - startTime
     // println("Total Running time is : " + runningTime)
   }
 }
