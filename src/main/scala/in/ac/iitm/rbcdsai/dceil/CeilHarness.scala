@@ -40,8 +40,8 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
     // Create graph
     val startTimeGraphCreation: Double = System.currentTimeMillis.toDouble / 1000L
     var ceilGraph = CeilCore.createCeilGraph(graph)
-    val n = ceilGraph.vertices.count() // n is total Graph Vertices
-    // println(" Total Vertices in graph : " + n)
+    val totalVertices = ceilGraph.numVertices
+
     val stopTimeGraphCreation: Double = System.currentTimeMillis.toDouble / 1000L
     val runTimeGraphCreation = stopTimeGraphCreation - startTimeGraphCreation
     // println("Create Graph Running time is : " + runn)
@@ -50,13 +50,14 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
     val startTimeGraphOperation: Double = System.currentTimeMillis.toDouble / 1000L
     var level = -1 // number of times the graph has been compressed
     var q = 0.0 // current modularity value
+    
     var halt = false
     do {
       level += 1
       // println(s"\nStarting Ceil level $level")
 
       // Labels each vertex with its best community choice at this level of compression
-      val (currentQ, currentGraph, passes) = CeilCore.ceil(sc, ceilGraph, minProgress, progressCounter, n)
+      val (currentQ, currentGraph, passes) = CeilCore.ceil(sc, ceilGraph, minProgress, progressCounter, totalVertices)
       ceilGraph.unpersistVertices(blocking = false)
       ceilGraph = currentGraph
 
@@ -66,8 +67,6 @@ class CeilHarness(minProgress: Int, progressCounter: Int) {
       // and repeats halt immediately if the community labeling takes less
       // than 3 passes.
 
-      // println(s"if ($passes > 2 && $currentQ > $q + 0000001 )")
-      //if (currentQ > q + 0.0000001) {
       if (passes > 2 && currentQ > q + 0.0000001) {
         q = currentQ
         val startTimeGraphCompression: Double = System.currentTimeMillis.toDouble / 1000L

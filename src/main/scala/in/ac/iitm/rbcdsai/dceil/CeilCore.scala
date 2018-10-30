@@ -54,7 +54,7 @@ object CeilCore {
     * @param minProgress the minimum progress
     * @param progressCounter the progress counter
     * @totalGraphVertices the number of vertices
-    * @return 
+    * @return modularity, graph and number of passes
    */
   def ceil(
     sc: SparkContext,
@@ -64,15 +64,12 @@ object CeilCore {
     totalGraphVertices: Long): (Double, Graph[VertexState, Long], Int) = {
 
     var ceilGraph = graph.cache()
-    //ceilGraph.vertices.foreach(println)
 
     // Gathers community information from local neighborhood of each vertex.
     var msgRDD = ceilGraph.mapReduceTriplets(sendMsg, mergeMsg).cache()
-    //msgRDD.foreach(println)
-    //msgRDD.saveAsTextFile("/home/akash/Documents/Spark_Program/01_test/Output_MsgRDD")
     msgRDD.count() //materializes the msgRDD and caches it in memory
 
-    var updated = 0L - minProgress // I don't get this concept, you can simply initialize from zero, as if you see flow of code, inside do {even = True and if(even) updated =0.
+    var updated = 0L - minProgress
     var even = false
     var count = 0
     val maxIter = 100000
@@ -92,8 +89,8 @@ object CeilCore {
       labeledVertices.count()
       val stopTime1: Double = System.currentTimeMillis.toDouble / 1000
       val T1 = stopTime1 - startTime1
-      // println("Running time is 0 : " + rT1)
 
+      //
       val startTime2: Double = System.currentTimeMillis.toDouble / 1000
       val updatedVertex = labeledVertices.map({ case (id, data) =>
         (id, data) }).cache()
@@ -102,18 +99,15 @@ object CeilCore {
       var prevGraph = ceilGraph
       ceilGraph = ceilGraph.outerJoinVertices(updatedVertex)((id, old, newOpt) => newOpt.getOrElse(old))
       ceilGraph.triplets.count()
-      //ceilGraph.triplets.foreach(println)      
-      //ceilGraph.vertices.foreach(println)
       updatedVertex.unpersist(blocking = false)
       labeledVertices.unpersist(blocking = false)
       prevGraph.unpersistVertices(blocking = false)
 
       val stopTime2: Double = System.currentTimeMillis.toDouble / 1000
       val T2 = stopTime2 - startTime2
-      // println("Running time is 1 : " + rT_a)
 
+      //
       val startTime3: Double = System.currentTimeMillis.toDouble / 1000
-      // Updated_Vert is a RDD gives the output with each community and it's internal edges
       var vertCommunitySet = scala.collection.mutable.HashSet[Long]()
       val updatedVertInternalWt = ceilGraph.triplets.flatMap(et => {
         if (et.srcAttr.community == et.dstAttr.community) {
@@ -151,12 +145,11 @@ object CeilCore {
         }
       }).reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2, x._3 + y._3)).cache()
       updatedVertInternalWt.count()
-      //updatedVertInternalWt.foreach(println) //(cId, (comIntVert+commNodesVert, commIntWt+commExtWt+commVertIntWt, ComInternalWt+nodeInternalWt)) // (cId, (comIntVert, commTotalEdges/sigTot, commInternalEdges))
 
       val stopTime3: Double = System.currentTimeMillis.toDouble / 1000
       val T3 = stopTime3 - startTime3
-      // println("Running time is 2 : " + runningTime)
 
+      //
       val startTime4: Double = System.currentTimeMillis.toDouble / 1000
 
       // map each vertex ID to its updated community information
@@ -175,25 +168,18 @@ object CeilCore {
             (id, data)
         }).cache()
       updatedVerts.count()
-      //updatedVerts.foreach(println)
-      //( cId, (vId,vdata), (comIntVert, sigmaTot, ComInternalWt+nodeInternalWt)) // 2nd map o/p :(VertexId, VertexState)
       updatedVertInternalWt.unpersist(blocking = false)
 
       val stopTime4: Double = System.currentTimeMillis.toDouble / 1000
       val T4 = stopTime4 - startTime4
-      // println("Running time is 3 : " + rT3)
 
+      //
       val startTime5: Double = System.currentTimeMillis.toDouble / 1000
       prevGraph = ceilGraph
       ceilGraph = ceilGraph.outerJoinVertices(updatedVerts)((vid, old, newOpt) => newOpt.getOrElse(old))
       ceilGraph.cache()
-      //.partitionBy(PartitionStrategy.EdgePartition2D).groupEdges(_ + _).cache()
-      //ceilGraph.triplets.count()
-      //ceilGraph.triplets.foreach(println)
-      //ceilGraph.vertices.foreach(println)
       val oldMsgs = msgRDD
       msgRDD = ceilGraph.mapReduceTriplets(sendMsg, mergeMsg).cache()
-      //msgRDD.foreach(println) // Messages form with respect to new Graph.
       msgRDD.count() // materializes the graph by forcing computation
       oldMsgs.unpersist(blocking = false)
       prevGraph.unpersistVertices(blocking = false)
@@ -202,15 +188,14 @@ object CeilCore {
       if (even) updated = 0
       updated = updated + ceilGraph.vertices.filter(_._2.changed).count()
       if (!even) {
-        println("  # vertices moved: " + java.text.NumberFormat.getInstance().format(updated))
+        // println("  # vertices moved: " + java.text.NumberFormat.getInstance().format(updated))
         if (updated >= updatedLastPhase - minProgress) stop += 1
-        //if (updated < minProgress) stop += 1
         updatedLastPhase = updated
       }
 
       val stopTime5: Double = System.currentTimeMillis.toDouble / 1000
       val T5 = stopTime5 - startTime5
-      // println("Running time is 4 : " + runningTime4)
+
     } while (stop <= progressCounter && (even || (updated > 0 && count < maxIter)))
     // println("\nCompleted in " + count + " cycles") //above condition is condition to terminate phase -1
 

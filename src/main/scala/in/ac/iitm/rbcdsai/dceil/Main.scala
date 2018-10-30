@@ -11,7 +11,7 @@ case class Config(
   input: String = "",
   output: String = "",
   master: String = "local",
-  appName: String = "graphX analytic",
+  appName: String = "DCEIL",
   jars: String = "",
   sparkHome: String = "",
   parallelism: Int = -1,
@@ -44,7 +44,7 @@ object Main {
         text("$SPARK_HOME required to run on cluster")
 
       opt[String]('n', "jobname").action( (x, c) => c.copy(appName = x) ).
-        text("job name")
+        text("job name. default=\"DCEIL\"")
 
       opt[Int]('p', "parallelism").action( (x, c) => c.copy(parallelism = x) ).
         text ("sets spark.default.parallelism and minSplits on the edge file")
@@ -64,7 +64,7 @@ object Main {
         c.copy(jars = x) ).text("comma-separated list of jars")
 
       opt[Boolean]('z', "ipaddress").action( (x, c) => c.copy(ipAddress = x) ).
-        text("set to true to convert ipaddresses to Long ids. default=false")
+        text("set to true to convert IP addresses to Long ids. default=false")
 
       help("help").text("prints this usage text")
 
@@ -77,6 +77,7 @@ object Main {
     var properties: Seq[(String, String)] = Seq.empty[(String, String)]
     var parallelism, minProgress, progressCounter = -1
     var ipAddress = false
+
     parser.parse(args, Config()) map {
       config =>
         edgeFile = config.input

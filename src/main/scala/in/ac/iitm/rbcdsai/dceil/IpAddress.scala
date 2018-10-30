@@ -25,8 +25,7 @@ object IpAddress {
       InetAddress.getByName(_address)
     } catch {
       case e: Throwable =>
-        throw new IllegalArgumentException("Could not parse address: " +
-          e.getMessage)
+        throw new IllegalArgumentException("Could not parse address: " + e.getMessage)
     }
     val addressBytes = address.getAddress
     val byteBuffer = ByteBuffer.allocate(8)
@@ -35,8 +34,7 @@ object IpAddress {
         byteBuffer.put(Array[Byte](0,0,0,0)) // Needs a filler
         byteBuffer.put(addressBytes)
       case n =>
-        throw new IndexOutOfBoundsException("Expected 4 byte address, got "
-          + n)
+        throw new IndexOutOfBoundsException("Expected 4 byte address, got " + n)
     }
     byteBuffer.getLong(0)
   }
