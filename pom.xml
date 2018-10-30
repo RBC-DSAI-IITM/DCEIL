@@ -12,7 +12,7 @@
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <scala.version>2.10.4</scala.version>
+    <scala.version>2.11</scala.version>
   </properties>
 
   <pluginRepositories>
@@ -28,25 +28,25 @@
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.10</artifactId>
+      <artifactId>spark-core_2.11</artifactId>
       <version>1.4.0</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-graphx -->
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-graphx_2.10</artifactId>
+      <artifactId>spark-graphx_2.11</artifactId>
       <version>1.4.0</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.github.scopt/scopt_2.10 -->
     <dependency>
       <groupId>com.github.scopt</groupId>
-      <artifactId>scopt_2.10</artifactId>
+      <artifactId>scopt_2.11</artifactId>
       <version>3.7.0</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.scalatest/scalatest -->
     <dependency>
         <groupId>org.scalatest</groupId>
-        <artifactId>scalatest_2.10</artifactId>
+        <artifactId>scalatest_2.11</artifactId>
         <version>3.0.5</version>
         <scope>test</scope>
     </dependency>
@@ -70,12 +70,6 @@
               <goal>compile</goal>
               <goal>testCompile</goal>
             </goals>
-          <!--   <id>scala-compile-first</id> -->
-          <!--   <phase>process-resources</phase> -->
-          <!--   <goals> -->
-          <!--     <goal>add-source</goal> -->
-          <!--     <goal>compile</goal> -->
-          <!--   </goals> -->
           </execution>
         </executions>
       </plugin>
