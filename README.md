@@ -4,13 +4,52 @@ DCEIL is the *first* distributed community detection algorithm based on the stat
 
 ## Getting started
 
-1. Clone this repository to your local system.
-2. Build the tool using `maven`, like so: `mvn clean install`. If you don't have `maven`, please check [Maven](https://maven.apache.org) for installation to your local system.
-3. Run the installed tool using `java` with the `--jar` flag.
+1. Ensure that Java 8 is installed in your system. If not, please head over to [Java 8 Downloads](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and install Java SE Runtime Environment before proceeding. Run `java -version` to enure proper installation. 
+1. Clone this repository to your system and change your working directory to the cloned one.
+2. Ensure that you have `maven` installed. If not, please check [Maven](https://maven.apache.org) for installation instructions. Run `mvn -version` to ensure proper installation. Build the tool using `maven`, like so: `mvn clean package`.
+3. The above step generates a `dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar` file in the `target/` directory. Run the file using `java` with the `-jar` flag, like so: `java -jar target/dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar --help`. 
+
+## Usage
+
+```
+DCEIL 1.0.0
+Usage: dceil [options] <input_file> <output_file> [<property>=<value>...]
+
+  <input_file>                   input file
+  <output_file>                  output path
+  -m, --master <value>           spark master, local[N] or spark://host:port. default=local
+  -h, --sparkhome <value>        $SPARK_HOME required to run on cluster
+  -n, --jobname <value>          job name. default="DCEIL"
+  -p, --parallelism <value>      sets spark.default.parallelism and minSplits on the edge file
+  -x, --minprogress <value>      number of vertices that must change communites for the
+                                 algorithm to consider progress. default=2000
+  -y, --progresscounter <value>  number of times the algorithm can fail to make progress
+                                 before exiting. default=1
+  -d, --edgedelimiter <value>    input file edge delimiter. default=","
+  -j, --jars <jar1>,<jar2>...    comma-separated list of jars
+  -z, --ipaddress <value>        set to true to convert IP addresses to Long ids. default=false
+  --help                         prints this usage text
+  <property>=<value>...          optional unbounded arguments
+```
+
+## Examples
+
+#### Running locally
+
+```
+java -jar target/dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar 'file:/path/to/input/edge/file' 'file:/path/to/output/'
+```
+
+#### Running on cluster
+
+```
+java -jar target/dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar 'hdfs:/path/to/input/edge/file' 'hdfs:/path/to/output' -m 'spark://host:port' 
+```
 
 ## Citation
 
-If you use DCEIL in your work, please cite [doi:10.1109/hpcc-smartcity-dss.2017.19](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19).
+If you use DCEIL in your work, please cite [A. Jain, R. Nasre and B. Ravindran, "DCEIL: Distributed Community Detection with the CEIL Score," 2017 IEEE 19th International Conference on High Performance Computing and Communications; IEEE 15th International Conference on Smart City; IEEE 3rd International Conference on Data Science and Systems (HPCC/SmartCity/DSS), Bangkok, 2017, pp. 146-153.
+doi: 10.1109/HPCC-SmartCity-DSS.2017.19](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19).
 
 ## Acknowledgements
 
