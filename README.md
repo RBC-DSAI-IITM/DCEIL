@@ -4,10 +4,41 @@ DCEIL is the *first* distributed community detection algorithm based on the stat
 
 ## Getting started
 
-1. Ensure that Java 8 is installed in your system. If not, please head over to [Java 8 Downloads](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and install Java SE Runtime Environment before proceeding. Run `java -version` to enure proper installation. 
+### Building from source
+
+1. Ensure that Java 8 is installed in your system. If not, please head over to [Java 8 Downloads](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and install Java SE Runtime Environment before proceeding. Run `java -version` to enure proper installation.
 1. Clone this repository to your system and change your working directory to the cloned one.
 2. Ensure that you have `maven` installed. If not, please check [Maven](https://maven.apache.org) for installation instructions. Run `mvn -version` to ensure proper installation. Build the tool using `maven`, like so: `mvn clean package`.
-3. The above step generates a `dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar` file in the `target/` directory. Run the file using `java` with the `-jar` flag, like so: `java -jar target/dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar --help`. 
+3. The above step generates a `dceil-1.0.0-jar-with-dependencies.jar` file in the `target/` directory.
+4. Follow the instructions for setting up Apache Spark.
+
+### Using compiled executable file
+
+If you prefer a compiled executable file, please download the `dceil-1.0.0.jar` file from the repository and follow the Apache Spark setup instructions.
+
+### Setting up Apache Spark
+
+1. Please [download](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz) Apache Spark 1.4.0. [md5](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz.md5), [asc](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz.asc) and [sha](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz.sha) are also provided if you want to check the integrity of the downloaded file.
+2. On Linux and macOS (for Windows, check [this](https://stackoverflow.com/questions/25481325/how-to-set-up-spark-on-windows) for help):
+
+```
+$ tar xvf <path/to/spark/tgz>
+$ su
+# mv <path/to/spark> /usr/local/spark
+# exit
+```
+
+For Bash shell:
+
+```
+$ export PATH=$PATH:/usr/local/spark/bin
+```
+
+For Fish shell:
+
+```
+$ set -g fish_user_paths "/usr/local/spark/bin" $fish_user_paths
+```
 
 ## Usage
 
@@ -34,16 +65,24 @@ Usage: dceil [options] <input_file> <output_file> [<property>=<value>...]
 
 ## Examples
 
-#### Running locally
+To get the help, run:
 
 ```
-java -jar target/dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar 'file:/path/to/input/edge/file' 'file:/path/to/output/'
+$ spark-submit dceil-1.0.0.jar --help
+```
+
+#### Running locally
+
+To run DCEIL, we need to make use of the `spark-submit` script provided by Spark.
+
+```
+$ spark-submit dceil-1.0.0.jar 'file:/path/to/input/edge/file' 'file:/path/to/output/'
 ```
 
 #### Running on cluster
 
 ```
-java -jar target/dceil-1.0.0-SNAPSHOT-jar-with-dependencies.jar 'hdfs:/path/to/input/edge/file' 'hdfs:/path/to/output' -m 'spark://host:port' 
+$ spark-submit dceil-1.0.0.jar 'hdfs:/path/to/input/edge/file' 'hdfs:/path/to/output' -m 'spark://host:port' 
 ```
 
 ## Citation
