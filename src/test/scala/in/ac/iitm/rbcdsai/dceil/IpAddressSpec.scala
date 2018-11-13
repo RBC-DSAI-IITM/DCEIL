@@ -1,3 +1,5 @@
+package in.ac.iitm.rbcdsai.dceil
+
 import org.scalatest.FunSuite
 
 /** IpAddressSpec tests methods of IpAddress.*/
