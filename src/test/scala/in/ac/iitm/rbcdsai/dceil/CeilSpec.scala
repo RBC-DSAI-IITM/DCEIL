@@ -1,13 +1,11 @@
-package in.ac.iitm.rbcdsai.dceil
-
 import java.io.File
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.{Edge, Graph}
 import org.apache.log4j.{Level,Logger}
 import org.scalatest.FunSuite
 
-/** CeilTests tests methods of CeilCore and CeilHarness.*/
-class CeilTests extends FunSuite {
+/** CeilSpec tests methods of CeilCore and CeilHarness.*/
+class CeilSpec extends FunSuite {
 
   // initialize SparkContext
   val sc = new SparkContext("local[*]", "DCEIL tests")

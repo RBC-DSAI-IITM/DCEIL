@@ -1,9 +1,7 @@
-package in.ac.iitm.rbcdsai.dceil
-
 import org.scalatest.FunSuite
 
-/** IpAddressTests tests methods of IpAddress.*/
-class IpAddressTests extends FunSuite {
+/** IpAddressSpec tests methods of IpAddress.*/
+class IpAddressSpec extends FunSuite {
 
   // test toString()
   test("toString should return String") {
