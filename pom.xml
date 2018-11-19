@@ -107,7 +107,7 @@
      <!-- build jar with dependencies -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.4</version>
+        <version>3.1.0</version>
         <configuration>
           <archive>
             <manifest>
