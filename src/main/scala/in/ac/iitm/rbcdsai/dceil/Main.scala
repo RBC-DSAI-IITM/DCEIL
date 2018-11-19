@@ -10,13 +10,13 @@ import org.apache.log4j.{Level,Logger}
 case class Config(
   input: String = "",
   output: String = "",
-  master: String = "local",
+  master: String = "local[*]",
   appName: String = "DCEIL",
   jars: String = "",
   sparkHome: String = "",
   parallelism: Int = -1,
   edgeDelimiter: String = ",",
-  minProgress: Int = 1,
+  minProgress: Int = 2000,
   progressCounter: Int = 1,
   ipAddress: Boolean = false,
   properties: Seq[(String, String)] = Seq.empty[(String, String)])
@@ -28,6 +28,11 @@ object Main {
 
   def main(args: Array[String]) {
 
+    // configure logging
+    val logger = Logger.getRootLogger()
+    logger.setLevel(Level.INFO)
+
+    // configure CLI parser
     val parser = new scopt.OptionParser[Config]("dceil") {
       head("DCEIL", "1.0.0")
 
@@ -73,13 +78,13 @@ object Main {
         text("optional unbounded arguments")
     }
 
-    var edgeFile, outputDir, master, jobName, jars, sparkHome, edgeDelimiter = ""
+    var edgeFile, outputDir, master, jobName, jars, sparkHome, edgeDelimiter: String = null
     var properties: Seq[(String, String)] = Seq.empty[(String, String)]
     var parallelism, minProgress, progressCounter = -1
     var ipAddress = false
 
-    parser.parse(args, Config()) map {
-      config =>
+    parser.parse(args, Config()) match {
+      case Some(config) =>
         edgeFile = config.input
         outputDir = config.output
         master = config.master
@@ -93,29 +98,24 @@ object Main {
         progressCounter = config.progressCounter
         ipAddress = config.ipAddress
 
-        if (edgeFile == "" || outputDir == "") {
-          println(parser.usage)
-          sys.exit(1)
-        }
-    } getOrElse {
-      sys.exit(1)
+      case None =>
+        parser.usage
+        sys.exit(1)
     }
-
     // set system properties
     properties.foreach({
       case (k, v) =>
-        // println(s"System.setProperty($k, $v)")
         System.setProperty(k, v)
     })
 
-    // println(edgeFile)
-    // println(outputDir)
-    // println(master)
-    // println(jobName)
-    // println(jars)
-    // println(properties)
-    // println(sparkHome)
-    // println(ipAddress)
+    logger.info(s"Input file: $edgeFile")
+    logger.info(s"Output path: $outputDir")
+    logger.info(s"Master: $master")
+    logger.info(s"Job: $jobName")
+    logger.info(s"Jars: $jars")
+    logger.info(s"Properties: $properties")
+    logger.info(s"Spark Home: $sparkHome")
+    logger.info(s"IP Address: $ipAddress")
 
     // Create the spark context
     var sc: SparkContext = null
@@ -124,9 +124,6 @@ object Main {
     } else {
       sc = new SparkContext(master, jobName, sparkHome, jars.split(","))
     }
-    
-    val rootLog = Logger.getRootLogger()
-    rootLog.setLevel(Level.ERROR)
     
     // read the input into a distributed edge list
     val inputHashFunc = if (ipAddress) (id: String) => IpAddress.toLong(id) else (id: String) => id.toLong
@@ -155,6 +152,6 @@ object Main {
     runner.run(sc, graph)
     val stopTime: Long = System.currentTimeMillis / 1000L
     val runningTime = stopTime - startTime
-    // println("Total Running time is : " + runningTime)
+    logger.info("Total running time is : " + runningTime)
   }
 }
