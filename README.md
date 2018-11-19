@@ -25,8 +25,7 @@ If you prefer a compiled executable file, please download the `dceil-1.0.0.jar` 
 
 ```
 $ tar xvf <path/to/spark/tgz>
-$ su (for macOS) 
-$ sudo su (for Linux)
+$ sudo su
 # mv <path/to/spark> /usr/local/spark
 # exit
 ```
