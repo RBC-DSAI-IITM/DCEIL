@@ -1,3 +1,5 @@
+<a href="https://rbcdsai.iitm.ac.in/"><img title="RBC-DSAI logo" src="https://github.com/RBC-DSAI-IITM/rbc-dsai-iitm.github.io/blob/master/images/logo.jpg" height="200" width="351"></a>
+
 # DCEIL
 
 DCEIL is the *first* distributed community detection algorithm based on the state-of-the-art CEIL scoring function.
@@ -89,7 +91,3 @@ $ spark-submit dceil-1.0.0.jar 'hdfs:/path/to/input/edge/file' 'hdfs:/path/to/ou
 
 If you use DCEIL in your work, please cite [A. Jain, R. Nasre and B. Ravindran, "DCEIL: Distributed Community Detection with the CEIL Score," 2017 IEEE 19th International Conference on High Performance Computing and Communications; IEEE 15th International Conference on Smart City; IEEE 3rd International Conference on Data Science and Systems (HPCC/SmartCity/DSS), Bangkok, 2017, pp. 146-153.
 doi: 10.1109/HPCC-SmartCity-DSS.2017.19](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19).
-
-## Acknowledgements
-
-<a href="https://rbcdsai.iitm.ac.in/"><img title="RBC-DSAI logo" src="https://github.com/RBC-DSAI-IITM/rbc-dsai-iitm.github.io/blob/master/images/logo.jpg" height="200" width="351"></a>
