@@ -2,49 +2,47 @@
 
 # DCEIL
 
-DCEIL is the *first* distributed community detection algorithm based on the state-of-the-art CEIL scoring function.
+DCEIL is the *first* distributed community detection algorithm based on the state-of-the-art CEIL scoring function. Please check the [publication](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19) for more details.
+
+## Authors
+
+1. [Akash Jain](https://github.com/akash-jain1306)
+2. [Rupesh Nasre](http://www.cse.iitm.ac.in/~rupesh/)
+3. [Balaraman Ravindran](http://www.cse.iitm.ac.in/~ravi/)
 
 ## Getting started
 
 ### Building from source
 
-1. Ensure that Java 8 is installed in your system. If not, please head over to [Java 8 Downloads](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and install Java SE Runtime Environment before proceeding. Run `java -version` to enure proper installation.
-1. Clone this repository to your system and change your working directory to the cloned one.
-2. Ensure that you have `maven` installed. If not, please check [Maven](https://maven.apache.org) for installation instructions. Run `mvn -version` to ensure proper installation. Build the tool using `maven`, like so: `mvn clean package`.
-3. The above step generates a `dceil-1.0.0-jar-with-dependencies.jar` file in the `target/` directory.
-4. Follow the instructions for setting up Apache Spark.
+1. Ensure that Java 8 is installed in your system. Run `java -version` to enure proper installation. If not, please install Java 8 SE Development Kit (JDK) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
+2. Ensure that you have `maven` installed. Run `mvn -v` to ensure proper installation. If not, please install Maven following the official documentation.
+3. Clone this repository to your system and change your working directory to the cloned one. Build DCEIL using `maven`, like so: `mvn clean package`.
+4. The above step generates a `dceil-1.0.0-jar-with-dependencies.jar` file in the `target/` directory.
+5. Follow the instructions for setting up Apache Spark.
 
 ### Using compiled executable file
 
-If you prefer a compiled executable file, please download the `dceil-1.0.0.jar` file from the repository and follow the Apache Spark setup instructions.
+1. Ensure that Java 8 is installed in your system. Run `java -version` to enure proper installation. If not, please install Java 8 SE Runtime Environment (JRE) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
+2. Please download the [dceil-1.0.0.jar](https://github.com/RBC-DSAI-IITM/DCEIL/dceil-1.0.0.jar) file from the repository and follow the Apache Spark setup instructions.
 
 ### Setting up Apache Spark
 
-1. Please [download](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz) Apache Spark 1.4.0. [md5](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz.md5), [asc](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz.asc) and [sha](https://archive.apache.org/dist/spark/spark-1.4.0/spark-1.4.0-bin-hadoop1-scala2.11.tgz.sha) are also provided if you want to check the integrity of the downloaded file.
-2. On Linux and macOS (for Windows, check [this](https://stackoverflow.com/questions/25481325/how-to-set-up-spark-on-windows) for help):
+1. Please install Apache Spark 1.4.0. Only Apache Spark 1.4.0 is tested as of now. Using any other version is not recommended. It might lead to errors and unexpected behaviors.
+2. Ensure `spark-submit --help` is working.
 
-```
-$ tar xvf <path/to/spark/tgz>
-$ sudo su
-# mv <path/to/spark> /usr/local/spark
-# exit
-```
+### Running on cluster
 
-For Bash shell:
-
-```
-$ export PATH=$PATH:/usr/local/spark/bin
-```
-
-For Fish shell:
-
-```
-$ set -g fish_user_paths "/usr/local/spark/bin" $fish_user_paths
-```
+1. To run on cluster, you will need to install Hadoop 1.0.0 and install it as per the instructions. You can use Hadoop 2.x or 3.x, but is not tested by us.
+2. You would need to initiate HDFS with proper configuration. Please follow the guide provided by Hadoop. After everything is set up, ensure `hadoop version` is working.
+3. Make sure Hadoop and Spark are working fine on the cluster.
 
 ## Usage
 
+To run DCEIL, we need to make use of the `spark-submit` script provided by Spark. To get the help, run:
+
 ```
+$ spark-submit dceil-1.0.0.jar --help
+
 DCEIL 1.0.0
 Usage: dceil [options] <input_file> <output_file> [<property>=<value>...]
 
@@ -65,34 +63,54 @@ Usage: dceil [options] <input_file> <output_file> [<property>=<value>...]
   <property>=<value>...          optional unbounded arguments
 ```
 
-## Examples
+### Input file format
 
-To get the help, run:
+The input file is the only thing apart from the CLI flags (if any), required to be provided by the user. The file is basically an adjacency list containing edges of the graph. Each line denotes an edge, whose nodes are separated by a delimiter. Generally, a single whitespace or comma is used as the delimiter. You can specify the delimiter used, by passing the same to the `-d` flag, like so: `-d ","`. Note that the delimiter must be enclosed within a pair of double quotes. 
+
+A few things to also note about the format:
+1. No comments or blank lines.
+2. No annotations. 
+3. No explicit mention of total nodes or edges.
+
+For clarity, here's a basic example of what `input.txt` can be:
 
 ```
-$ spark-submit dceil-1.0.0.jar --help
+1 2
+2 3
+3 4
+4 5
 ```
 
-#### Running locally
+### Output format
 
-To run DCEIL, we need to make use of the `spark-submit` script provided by Spark.
+By default, the outputs are saved for each level of iteration. The format followed is `level_{x}_vertices` and `level_{x}_vertices_Mapped`, where `x` denotes the level. There's also provision of saving only the final level and to do that you would have to add the functionality by overriding `finalSave()` in `HDFSCeilRunner`.
+
+The format followed in `level_{x}_vertices` is `Vertex: VertexState` and that in `level_{x}_vertices_Mapped` is `Community: list of Vertices in the community`. If desired, you can change the format of output to suit your requirement, by changing the behavior in `HDFSCeilRunner.saveLevel()`.
+
+### Running locally
 
 ```
 $ spark-submit dceil-1.0.0.jar 'file:/path/to/input/edge/file' 'file:/path/to/output/'
 ```
 
-#### Running on cluster
+### Running on cluster
 
 ```
-$ spark-submit dceil-1.0.0.jar 'hdfs:/path/to/input/edge/file' 'hdfs:/path/to/output' -m 'spark://host:port' 
+$ spark-submit dceil-1.0.0.jar 'hdfs:/path/to/input/edge/file' 'hdfs:/path/to/output' -m spark://host:port
 ```
+
+## Example
+
+Here's an example of running [email-EuAll](https://snap.stanford.edu/data/email-EuAll.html) dataset from [SNAP](https://snap.stanford.edu/), and input file being stored in HDFS, having input path as `/usr/hadoop/email-Eu-core.txt` and output directory path as `/usr/hadoop/email-Eu-core-output`:
+```
+$ spark-submit dceil-1.0.0.jar '/usr/hadoop/email-Eu-core.txt' '/usr/hadoop/email-Eu-core-output' -d " "
+```
+
+Since the default delimiter is comma, we had to specify the delimiter as a single whitepspace.
 
 ## Citation
 
-If you use DCEIL in your work, please cite [A. Jain, R. Nasre and B. Ravindran, "DCEIL: Distributed Community Detection with the CEIL Score," 2017 IEEE 19th International Conference on High Performance Computing and Communications; IEEE 15th International Conference on Smart City; IEEE 3rd International Conference on Data Science and Systems (HPCC/SmartCity/DSS), Bangkok, 2017, pp. 146-153.
-doi: 10.1109/HPCC-SmartCity-DSS.2017.19](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19).
-
-Here's also a BibTeX entry for the publication:
+If you use DCEIL in your work, please cite:
 
 ```
 @INPROCEEDINGS{8291922, 
