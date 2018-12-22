@@ -38,52 +38,46 @@ class HDFSCeilRunner(
     graph: Graph[VertexState, Long]) = {
  
     graph.vertices.saveAsTextFile(outputDir + "/level_" + level + "_vertices")
-    //graph.edges.saveAsTextFile(outputdir + "/level_" + level + "_edges")
-    //graph.vertices.map( {case (id,v) => ""+id+","+v.internalWeight+","+v.community }).saveAsTextFile(outputdir+"/level_"+level+"_vertices_Mapped")
-    //graph.edges.mapValues({ case e => "" + e.srcId + "," + e.dstId + "," + e.attr }).saveAsTextFile(outputdir+"/level_"+level+"_edges")  
+
     qValues = qValues :+ ((level, q))
-    // println(s"qValue: $q")
 
     // Overwrites the q values at each level
-    sc.parallelize(qValues, 1) //.saveAsTextFile(outputdir+"/qvalues")
+    sc.parallelize(qValues, 1)
     
     val communityVertMap = scala.collection.mutable.Map[Long, List[Long]]()
-    val prevCommunityVert = prevLevelCommunityVert      // previous level's community:vertices map
+    val prevCommunityVert = prevLevelCommunityVert
     
     val comm: RDD[scala.collection.mutable.Map[Long,List[Long]]] = graph.vertices.map({
       case (id, data) =>
         val vertexId: Long = id
         val vertexComm = data.community
-        //println("Community is : "+vertex_Comm +", Vertex of this community is : "+vid)
+
         if (!communityVertMap.contains(vertexComm)) {
           val newListOfVert = List(vertexId)
-          //println(newList_Of_Vert)
+
           if (!prevCommunityVert.isEmpty) {
             var updatedList: List[Long] = List()
+
             newListOfVert.foreach { id =>
               if (prevCommunityVert.contains(id)) {
                 val newList = prevCommunityVert.getOrElse(id, List(id))
+
                 newList.foreach { v =>
                   if (!updatedList.contains(v)) {
                     updatedList :::= List(v)
-                    //println("New Updated list : "+updatedList)
                   } 
                 }
               }
             }
-            //println("New Updated list of Vertices is : "+updatedList)
-//            if (!updatedList.contains(vertex_Comm)) {
-//              updatedList :::= List(vertex_Comm)
-//            }
+
             communityVertMap.put(vertexComm, updatedList)
           } else {
             communityVertMap.put(vertexComm, newListOfVert)
           }
-          
         } else {
           val existingListOfVert = communityVertMap.getOrElse(vertexComm, List[Long]())
           val newListOfVert = existingListOfVert ::: List(vertexId)
-          //println(newList_Of_Vert)
+
           if (!prevCommunityVert.isEmpty) {
             var updatedList: List[Long] = List()
             newListOfVert.foreach { id =>
@@ -92,15 +86,10 @@ class HDFSCeilRunner(
                 newList.foreach { v =>
                   if (!updatedList.contains(v)) {
                     updatedList :::= List(v)
-                    //println("New Updated list : "+updatedList)
                   } 
                 }
               }
             }
-//            println("New Updated list of Vertices is : "+updatedList)
-//            if (!updatedList.contains(vertex_Comm)) {
-//              updatedList :::= List(vertex_Comm)
-//            }
             communityVertMap.put(vertexComm, updatedList)
           } else {
             communityVertMap.put(vertexComm, newListOfVert)
@@ -110,9 +99,9 @@ class HDFSCeilRunner(
     })
     comm.count()
     prevLevelCommunityVert = comm.collect().last
-    //println(prevLevelCommunityVert)
+
     sc.parallelize(prevLevelCommunityVert.toSeq).
-      saveAsTextFile(outputDir + "/level_" + level + "_vertices_Mapped1")
+      saveAsTextFile(outputDir + "/level_" + level + "_vertices_Mapped")
     comm.unpersist(blocking = false)
   }
 }
