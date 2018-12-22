@@ -23,7 +23,7 @@ DCEIL is the *first* distributed community detection algorithm based on the stat
 ### Using compiled executable file
 
 1. Ensure that Java 8 is installed in your system. Run `java -version` to enure proper installation. If not, please install Java 8 SE Runtime Environment (JRE) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
-2. Please download the [dceil-1.0.0.jar](https://github.com/RBC-DSAI-IITM/DCEIL/dceil-1.0.0.jar) file from the repository and follow the Apache Spark setup instructions.
+2. Please download the [dceil-1.0.0.jar](https://github.com/RBC-DSAI-IITM/DCEIL/dist/dceil-1.0.0.jar) file from the `dist` directory in the repository and follow the Apache Spark setup instructions.
 
 ### Setting up Apache Spark
 
