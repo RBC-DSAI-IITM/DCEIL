@@ -14,7 +14,7 @@ DCEIL is the *first* distributed community detection algorithm based on the stat
 
 ### Building from source
 
-1. Ensure that Java 8 is installed in your system. Run `java -version` to enure proper installation. If not, please install Java 8 SE Development Kit (JDK) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
+1. Ensure that Java 8 is installed in your system. Run `java -version` to ensure proper installation. If not, please install Java 8 SE Development Kit (JDK) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
 2. Ensure that you have `maven` installed. Run `mvn -v` to ensure proper installation. If not, please install Maven following the official documentation.
 3. Clone this repository to your system and change your working directory to the cloned one. Build DCEIL using `maven`, like so: `mvn clean package`.
 4. The above step generates a `dceil-1.0.0-jar-with-dependencies.jar` file in the `target/` directory.
