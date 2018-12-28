@@ -14,25 +14,25 @@ DCEIL is the *first* distributed community detection algorithm based on the stat
 
 ### Building from source
 
-1. Ensure that Java 8 is installed in your system. Run `java -version` to ensure proper installation. If not, please install Java 8 SE Development Kit (JDK) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
-2. Ensure that you have `maven` installed. Run `mvn -v` to ensure proper installation. If not, please install Maven following the official documentation.
+1. Ensure that Java 8 is installed in your system. Run `java -version` to ensure proper installation. If not, please install [Java SE Development Kit 8](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) before proceeding. You can also use [OpenJDK](https://openjdk.java.net/install/) if you prefer that.
+2. Ensure that you have `maven` installed. Run `mvn -v` to ensure proper installation. If not, please install [Maven](https://maven.apache.org/) following the official documentation.
 3. Clone this repository to your system and change your working directory to the cloned one. Build DCEIL using `maven`, like so: `mvn clean package`.
 4. The above step generates a `dceil-1.0.0-jar-with-dependencies.jar` file in the `target/` directory.
 5. Follow the instructions for setting up Apache Spark.
 
 ### Using compiled executable file
 
-1. Ensure that Java 8 is installed in your system. Run `java -version` to enure proper installation. If not, please install Java 8 SE Runtime Environment (JRE) before proceeding. (Note: You can also use OpenJDK if you prefer that.)
-2. Please download the [dceil-1.0.0.jar](https://github.com/RBC-DSAI-IITM/DCEIL/dist/dceil-1.0.0.jar) file from the `dist` directory in the repository and follow the Apache Spark setup instructions.
+1. Ensure that Java 8 is installed in your system. Run `java -version` to enure proper installation. If not, please install [Java SE Runtime Environment 8](https://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) before proceeding. You can also use [OpenJDK](https://openjdk.java.net/install/) if you prefer that.
+2. Please download [dceil-1.0.0.jar](https://github.com/RBC-DSAI-IITM/DCEIL/dist/dceil-1.0.0.jar) from the `dist` directory in the repository and follow the Apache Spark setup instructions.
 
 ### Setting up Apache Spark
 
-1. Please install Apache Spark 1.4.0. Only Apache Spark 1.4.0 is tested as of now. Using any other version is not recommended. It might lead to errors and unexpected behaviors.
+1. Please install [Apache Spark 1.4.0](https://spark.apache.org/releases/spark-release-1-4-0.html). Only Apache Spark 1.4.0 is tested as of now. Using any other version is not recommended. It might lead to errors and unexpected behaviors.
 2. Ensure `spark-submit --help` is working.
 
 ### Running on cluster
 
-1. To run on cluster, you will need to install Hadoop 1.0.0 and install it as per the instructions. You can use Hadoop 2.x or 3.x, but is not tested by us.
+1. To run on cluster, you will need to install [Hadoop 1.2.1](https://archive.apache.org/dist/hadoop/common/hadoop-1.2.1/) and install it as per the instructions. You can use Hadoop 2.x or 3.x, but is not tested by us.
 2. You would need to initiate HDFS with proper configuration. Please follow the guide provided by Hadoop. After everything is set up, ensure `hadoop version` is working.
 3. Make sure Hadoop and Spark are working fine on the cluster.
 
