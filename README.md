@@ -4,11 +4,8 @@
 
 DCEIL is the *first* distributed community detection algorithm based on the state-of-the-art CEIL scoring function. Please check the [publication](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19) for more details.
 
-## Authors
-
-1. [Akash Jain](https://github.com/akash-jain1306)
-2. [Rupesh Nasre](http://www.cse.iitm.ac.in/~rupesh/)
-3. [Balaraman Ravindran](http://www.cse.iitm.ac.in/~ravi/)
+[A. Jain](https://github.com/akash-jain1306), [R. Nasre](http://www.cse.iitm.ac.in/~rupesh/) and [B. Ravindran](http://www.cse.iitm.ac.in/~ravi/), "DCEIL: Distributed Community Detection with the CEIL Score," _2017 IEEE 19th International Conference on High Performance Computing and Communications; IEEE 15th International Conference on Smart City; IEEE 3rd International Conference on Data Science and Systems (HPCC/SmartCity/DSS)_, Bangkok, 2017, pp. 146-153.
+[doi: 10.1109/HPCC-SmartCity-DSS.2017.19](https://doi.org/10.1109/hpcc-smartcity-dss.2017.19)
 
 ## Getting started
 
